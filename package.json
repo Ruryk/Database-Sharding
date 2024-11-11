@@ -1,0 +1,17 @@
+{
+  "name": "postgresql_sharding",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "2gis:install":"cat postgresql/partitioning/_2gis_partition_magic.sql | docker exec -i store_main psql -U user -d store -W",
+    "partition:init":"cat postgresql/partitioning/init.sql | docker exec -i store_main psql -U user -d store -W",
+    "sharding:fdw:setup":"cat postgresql/sharding/fdw.setup.sql | docker exec -i store_main psql -U user -d store -W",
+    "db:seed":"cat postgresql/seed.sql | docker exec -i store_main psql -U user -d store -W",
+    "plproxy:db:seed":"cat postgresql/plproxy/seed.sql | docker exec -i store_main psql -U user -d store -W",
+    "sharding:proxy:setup":"cat postgresql/plproxy/proxy.setup.sql | docker exec -i store_main psql -U user -d store -W"
+  },
+  "author": "",
+  "license": "ISC"
+}

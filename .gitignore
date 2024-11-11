@@ -130,3 +130,8 @@ dist
 .pnp.*
 
 .idea/*
+
+postgresql-b/
+postgresql-b1/
+/postgresql-b2/
+postgresql-without-sharding/

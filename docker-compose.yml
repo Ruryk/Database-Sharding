@@ -1,0 +1,112 @@
+version: '3.8'
+services:
+  postgresql-b:
+    image: postgres:16
+    container_name: postgresql-b
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: books_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./config/postgresql-b:/var/lib/postgresql/data
+      - ./config/init_user.sql:/docker-entrypoint-initdb.d/init_user.sql
+      - ./config/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - shard-net
+    profiles:
+      - sharding_fdw
+
+  postgresql-b1:
+    image: postgres:16
+    container_name: postgresql-b1
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: books_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./config/postgresql-b1:/var/lib/postgresql/data
+      - ./config/init_user.sql:/docker-entrypoint-initdb.d/init_user.sql
+      - ./config/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./config/init_tables.sql:/docker-entrypoint-initdb.d/init_tables.sql
+    networks:
+      - shard-net
+    profiles:
+      - sharding_fdw
+
+  postgresql-b2:
+    image: postgres:16
+    container_name: postgresql-b2
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: books_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./config/postgresql-b2:/var/lib/postgresql/data
+      - ./config/init_user.sql:/docker-entrypoint-initdb.d/init_user.sql
+      - ./config/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./config/init_tables.sql:/docker-entrypoint-initdb.d/init_tables.sql
+    networks:
+      - shard-net
+    profiles:
+      - sharding_fdw
+
+  postgresql-without-sharding:
+    image: postgres:16
+    container_name: postgresql-without-sharding
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: books_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./config/postgresql-without-sharding:/var/lib/postgresql/data
+      - ./config/init_user.sql:/docker-entrypoint-initdb.d/init_user.sql
+      - ./config/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./config/init_tables.sql:/docker-entrypoint-initdb.d/init_tables.sql
+    networks:
+      - shard-net
+    profiles:
+      - without_sharding
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+    - postgresql-b
+    - postgresql-b1
+    - postgresql-b2
+    networks:
+      - shard-net
+    profiles:
+      - sharding_fdw
+
+  pgadmin-no-shard:
+    image: dpage/pgadmin4
+    container_name: pgadmin-no-shard
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+    - postgresql-without-sharding
+    networks:
+      - shard-net
+    profiles:
+      - without_sharding
+
+networks:
+  shard-net:
+    driver: bridge
