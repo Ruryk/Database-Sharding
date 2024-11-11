@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   postgresql-b:
     image: postgres:16
@@ -75,6 +74,56 @@ services:
     profiles:
       - without_sharding
 
+  citus-coordinator:
+    image: citusdata/citus:latest
+    container_name: citus-coordinator
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: books_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - /config/citus-coordinator:/var/lib/postgresql/data
+      - ./config/init_user.sql:/docker-entrypoint-initdb.d/init_user.sql
+      - ./config/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - shard-net
+    profiles:
+      - sharding_citus
+
+  citus-worker1:
+    image: citusdata/citus:latest
+    container_name: citus-worker1
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: books_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - /config/citus-worker1:/var/lib/postgresql/data
+    networks:
+      - shard-net
+    profiles:
+      - sharding_citus
+
+  citus-worker2:
+    image: citusdata/citus:latest
+    container_name: citus-worker2
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: books_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - /config/citus-worker2:/var/lib/postgresql/data
+    networks:
+      - shard-net
+    profiles:
+      - sharding_citus
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -84,9 +133,9 @@ services:
     ports:
       - "5050:80"
     depends_on:
-    - postgresql-b
-    - postgresql-b1
-    - postgresql-b2
+      - postgresql-b
+      - postgresql-b1
+      - postgresql-b2
     networks:
       - shard-net
     profiles:
@@ -101,11 +150,28 @@ services:
     ports:
       - "5050:80"
     depends_on:
-    - postgresql-without-sharding
+      - postgresql-without-sharding
     networks:
       - shard-net
     profiles:
       - without_sharding
+
+  pgadmin-citus:
+    image: dpage/pgadmin4
+    container_name: pgadmin-citus
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - citus-coordinator
+      - citus-worker1
+      - citus-worker2
+    networks:
+      - shard-net
+    profiles:
+      - sharding_citus
 
 networks:
   shard-net:
